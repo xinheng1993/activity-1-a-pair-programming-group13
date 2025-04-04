@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WeatherWeb App</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        text-align: center;
+        background-color: #f0f0f0;
+      }
+
+      header {
+        background: #4caf50;
+        color: white;
+        padding: 15px;
+        font-size: 24px;
+      }
+
+      input {
+        padding: 10px;
+        margin-right: 10px;
+        font-size: 16px;
+        width: 200px;
+        border: 2px solid #4caf50;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+
+      button {
+        padding: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        margin-bottom: 20px;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+
+      #result {
+        background-color: white;
+        margin-top: 40px;
+        padding: 20px;
+        border-radius: 10px;
+        border: 1px solid #ddd;
+        width: 80%;
+        max-width: 600px;
+        text-align: left;
+        margin: 0 auto;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .weather-item {
+        margin-bottom: 10px;
+        font-size: 18px;
+        line-height: 1.6;
+      }
+
+      .weather-item strong {
+        font-weight: bold;
+        color: #333;
+      }
+
+      footer {
+        background: #4caf50;
+        color: white;
+        padding: 10px;
+        position: fixed;
+        width: 100%;
+        bottom: 0;
+      }
+
+      .nested-object {
+        margin-left: 20px;
+        font-style: italic;
+        color: #555;
+      }
+
+      .weather-icon {
+        width: 50px;
+        height: 50px;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Welcome to WeatherWeb App</h1>
+    </header>
+
+    <div style="margin: 30px">
+      <input type="text" id="city" placeholder="Enter city" />
+      <button onclick="getWeather()">Search</button>
+      <div id="result"></div>
+    </div>
+
+    <script>
+      function getWeather() {
+        const cityName = document.getElementById('city').value;
+        fetch('http://127.0.0.1:5000/lookup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ cityName: cityName }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          console.log(data);
+          let content = "";
+	  if(data.cod == 200){
+		content += `<p class="weather-item"><strong>City Name:</strong> ${data.name}</p>`;
+		content += formatNestedObject(data.coord, "Coordinates");
+		content += formatWeather(data.weather[0]);
+		content += formatNestedObject(data.main, "Main Information");
+		content += formatNestedObject(data.wind, "Wind");
+		content += formatNestedObject(data.clouds, "Clouds");
+		content += `<p class="weather-item"><strong>Base:</strong> ${data.base}</p>`;
+		content += `<p class="weather-item"><strong>Visibility:</strong> ${data.visibility} meters</p>`;
+		document.getElementById('result').innerHTML = content;
+	  }else{
+	  	document.getElementById('result').innerHTML = data.message
+	  }
+          
+        })
+        .catch(error => {
+        	document.getElementById('result').innerHTML = "Error fetching weather data"
+          	console.log('Error:', error);
+        });
+      }
+
+      // Function to format general nested objects
+      function formatNestedObject(obj, title = "") {
+        let formatted = "";
+        if (title) {
+          formatted += `<p class="weather-item"><strong>${title}:</strong></p>`;
+        }
+
+        formatted += "<ul>";
+        for (const subKey in obj) {
+          if (obj.hasOwnProperty(subKey)) {
+            if (typeof obj[subKey] === 'object') {
+              formatted += `<li><strong>${subKey}:</strong> ${JSON.stringify(obj[subKey])}</li>`;
+            } else {
+              formatted += `<li><strong>${subKey}:</strong> ${obj[subKey]}</li>`;
+            }
+          }
+        }
+        formatted += "</ul>";
+        return formatted;
+      }
+
+      // Function to format weather data, including the icon
+      function formatWeather(weather) {
+        let formatted = `<p class="weather-item"><strong>Weather:</strong></p>`;
+        formatted += `<ul>
+          <li><strong>Description:</strong> ${weather.description}</li>
+          <li><strong>Main:</strong> ${weather.main}</li>
+        </ul>`;
+        return formatted;
+      }
+    </script>
+
+    <footer>&copy; 2025 WeatherWeb App</footer>
+  </body>
+</html>
