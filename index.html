@@ -58,6 +58,14 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       }
 
+      .hidden {
+        display: none;
+      }
+
+      .visible {
+        display: block;
+      }
+
       .weather-item {
         margin-bottom: 10px;
         font-size: 18px;
@@ -89,6 +97,10 @@
         height: 50px;
         margin-top: 10px;
       }
+
+      input.invalid {
+        border-color: red;
+      }
     </style>
   </head>
   <body>
@@ -97,36 +109,57 @@
     </header>
 
     <div style="margin: 30px">
-      <input type="text" id="city" placeholder="Enter city" />
+      <input type="text" id="city" placeholder="Enter city" required />
       <button onclick="getWeather()">Search</button>
-      <div id="result"></div>
-    </div>
+      <div id="result" class="hidden"></div>
+    </div>    
 
     <script>
-        const apiKey = "e2224ddc5efcf07f251db8f7a554d1b2";
-        async function getWeather() {
+      const apiKey = "e2224ddc5efcf07f251db8f7a554d1b2";
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const city = document.getElementById('city');
+        city.addEventListener('blur', () => {
+            if (!city.value.trim()) {
+                city.classList.add('invalid');
+            } else {
+                city.classList.remove('invalid');
+            }
+        });
+      });
+
+      async function getWeather() {
+        console.log('getWeather');
         city = document.getElementById('city').value;
+
+        document.getElementById('result').classList.remove('hidden');
+        document.getElementById('result').classList.remove('visible');
+
+        if (!city) {
+        document.getElementById('result').innerHTML = "Please input a city.";
+        return;
+        }
+
         url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
         fetch(url)
-        .then(response => response.json())
-        .then(data => {
-          console.log(data);
-          let content = "";
-	  if(data.cod == 200){
-		content += `<p class="weather-item"><strong>City Name:</strong> ${data.name}</p>`;
-		content += formatNestedObject(data.coord, "Coordinates");
-		content += formatWeather(data.weather[0]);
-		content += formatNestedObject(data.main, "Main Information");
-		content += formatNestedObject(data.wind, "Wind");
-		content += formatNestedObject(data.clouds, "Clouds");
-		content += `<p class="weather-item"><strong>Base:</strong> ${data.base}</p>`;
-		content += `<p class="weather-item"><strong>Visibility:</strong> ${data.visibility} meters</p>`;
-		document.getElementById('result').innerHTML = content;
-	  }else{
-	  	document.getElementById('result').innerHTML = data.message
-	  }
-          
-        })
+          .then(response => response.json())
+            .then(data => {
+              console.log(data);
+              let content = "";
+              if(data.cod == 200){
+                content += `<p class="weather-item"><strong>City Name:</strong> ${data.name}</p>`;
+                content += formatNestedObject(data.coord, "Coordinates");
+                content += formatWeather(data.weather[0]);
+                content += formatNestedObject(data.main, "Main Information");
+                content += formatNestedObject(data.wind, "Wind");
+                content += formatNestedObject(data.clouds, "Clouds");
+                content += `<p class="weather-item"><strong>Base:</strong> ${data.base}</p>`;
+                content += `<p class="weather-item"><strong>Visibility:</strong> ${data.visibility} meters</p>`;
+                document.getElementById('result').innerHTML = content;
+              }else{
+                document.getElementById('result').innerHTML = data.message
+              }
+            })
         .catch(error => {
         	document.getElementById('result').innerHTML = "Error fetching weather data"
           	console.log('Error:', error);
@@ -164,7 +197,6 @@
         return formatted;
       }
     </script>
-
     <footer>&copy; 2025 WeatherWeb App</footer>
   </body>
 </html>
